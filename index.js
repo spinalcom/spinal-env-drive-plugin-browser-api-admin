@@ -70,13 +70,19 @@ class SpinalDrive_App_Api_admin extends SpinalDrive_App {
    * @memberof SpinalDrive_App_Api_admin
    */
   action(obj) {
-    // const node = FileSystem._objects[obj.file._server_id];
-    // node._ptr.load((x) => {
-    let myWindow = window.open('', '');
-    let location = "/html/api-admin";
+
+    let authService = obj.scope.injector.get("authService");
+    let fs_path = obj.scope.fs_path;
+    let username = authService.get_user().username;
+    let path = "/__users__/" + username;
+    for (var i = 1; i < fs_path.length; i++) {
+      path += "/" + fs_path[i].name;
+    }
+    path += "/" + obj.file.name;
+    let myWindow = window.open("", "");
+    let location = "/html/api-admin/?path=" + btoa(path);
     myWindow.document.location = location;
     myWindow.focus();
-    // })
   }
 
   /**
@@ -85,8 +91,21 @@ class SpinalDrive_App_Api_admin extends SpinalDrive_App {
    * @returns {boolean}
    * @memberof SpinalDrive_App_Api_admin
    */
-  is_shown() {
-    return Promise.resolve(true);
+
+  is_shown(d) {
+    if (d && d.file && d.file._server_id) {
+      let file = window.FileSystem._objects[d.file._server_id];
+      if (
+        file &&
+        file instanceof File &&
+        file._info.model_type &&
+        (file._info.model_type.get() === "BIM Project" ||
+          file._info.model_type.get() === "Digital twin")
+      ) {
+        return true;
+      }
+    }
+    return false;
   }
 }
 // const spinalDrive_Env = new SpinalDrive_Env()
